@@ -5,8 +5,6 @@
 
 [node name="Mouse" instance=ExtResource("1_ttf2w")]
 Diet = 0
-Health = 60.0
-Hunger = 60.0
 
 [node name="Icon" type="Sprite2D" parent="." index="1"]
 scale = Vector2(0.2, 0.2)

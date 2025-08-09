@@ -9,9 +9,14 @@ public partial class Animal : CharacterBody2D, IBio
 
 	public AnimalStateEnum State { get; set; } = AnimalStateEnum.Fine;
 	[Export]
-	public float Health { get; set; } = 100.0f;
+	public float MaxHealth { get; set; } = 100.0f;
 	[Export]
+	public float MaxHunger { get; set; } = 100.0f;
+	public float Health { get; set; } = 100.0f;
 	public float Hunger { get; set; } = 100.0f;
+	[Export]
+	public float EatEfficiency { get; set; } = 0.8f;
+
 	[Export]
 	public float EatRange { get; set; } = 30.0f;
 	public Node2D TargetNode { get; set; } = null;
@@ -21,6 +26,9 @@ public partial class Animal : CharacterBody2D, IBio
 	{
 		AddToGroup($"{Diet}Animals");
 		GetNode<CollisionShape2D>("Mouth/ReachArea").Shape.Set("Radius", EatRange);
+		Hunger = MaxHunger;
+		Health = MaxHealth;
+
 
 		InfLabel = new Label();
 		AddChild(InfLabel);
@@ -41,6 +49,11 @@ public partial class Animal : CharacterBody2D, IBio
 				{
 					case AnimalTypeEnum.Herbivore:
 						var nodes = GetTree().GetNodesInGroup("Plants");
+						if (nodes.Count == 0)
+						{
+							State = AnimalStateEnum.Fine;
+							return;
+						}
 						var plants = nodes.Cast<Plant>();
 						var nearest = plants.OrderBy(p => p.GlobalPosition.DistanceTo(GlobalPosition)).First();
 						TargetNode = nearest;
@@ -61,6 +74,17 @@ public partial class Animal : CharacterBody2D, IBio
 		else if ((Hunger >= 50f && State == AnimalStateEnum.Hunting) || (Health >= 50f && State == AnimalStateEnum.Sleeping))
 		{
 			State = AnimalStateEnum.Fine;
+		}
+		else
+		{
+			if (Hunger >= MaxHunger)
+			{
+				Hunger = MaxHunger;
+			}
+			if (Health >= MaxHealth)
+			{
+				Health = MaxHealth;
+			}
 		}
 
 		Velocity = Input.GetVector("Left", "Right", "Up", "Down") * 300f;
@@ -88,12 +112,11 @@ public partial class Animal : CharacterBody2D, IBio
 				break;
 		}
 	}
-
-	public void Eat(IBio body)
+	public void Eat(IBio node)
 	{
-		body.BeEaten();
+		Hunger += node.BeEaten();
+		TargetNode = null;
 	}
-
 }
 public enum AnimalTypeEnum
 {

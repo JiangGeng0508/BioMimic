@@ -5,9 +5,12 @@ public partial class Plant : Area2D,IBio
 {
 	public Sprite2D icon;
 	[Export]
-	public float Health { get; set; } = 100.0f;
+	public float MaxHealth { get; set; } = 100.0f;
 	[Export]
+	public float MaxHunger { get; set; } = 100.0f;
+	public float Health { get; set; } = 100.0f;
 	public float Hunger { get; set; } = 100.0f;
+	public float EatEfficiency { get; set; } = 0.8f;
 
 	public override void _Ready()
 	{
