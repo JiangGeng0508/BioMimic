@@ -31,17 +31,38 @@ public partial class Animal : CharacterBody2D, IBio
 		Hunger = MaxHunger;
 		Health = MaxHealth;
 
-
 		InfLabel = new Label();
 		AddChild(InfLabel);
 	}
 	public override void _PhysicsProcess(double delta)
 	{
+		
 		Health -= (float)delta * 0.1f;
-		Hunger -= (float)delta * 0.1f;
+		Hunger -= (float)delta * 0.3f;
 		InfLabel.Text = $"\nHealth: {Health:F1}\nHunger: {Hunger:F1}\nState: {State}";
 
-		if (Hunger <= 50f)
+		if (Health <= 0)
+		{
+			QueueFree();
+			return;
+		}
+		if (Hunger <= 0)
+		{
+			Health -= (float)delta * 0.2f;
+			Hunger = 0;
+		}
+		else if (Hunger > MaxHunger * 0.5f)
+		{
+			Health += (float)delta * 0.2f;
+		}
+		else if (Hunger >= MaxHunger)
+		{
+			Health += Hunger - MaxHunger;
+			Hunger = MaxHunger;
+		}
+
+
+		if (Hunger <= MaxHunger * 0.5f)
 		{
 			if (State != AnimalStateEnum.Hunting)
 			{
@@ -59,6 +80,12 @@ public partial class Animal : CharacterBody2D, IBio
 						var plants = nodes1.Cast<Plant>();
 						var nearestPlant = plants.OrderBy(p => p.GlobalPosition.DistanceTo(GlobalPosition)).First();
 						TargetNode = nearestPlant;
+						TargetNode.TreeExiting += () =>
+						{
+							TargetNode = null;
+							State = AnimalStateEnum.Fine;
+							Velocity = Vector2.Zero;
+						};
 						GD.Print($"Hunting {nearestPlant.Name} at {nearestPlant.GlobalPosition}");
 						break;
 					case AnimalTypeEnum.Carnivore:
@@ -80,14 +107,14 @@ public partial class Animal : CharacterBody2D, IBio
 				}
 			}
 		}
-		else if (Health <= 50f)
+		else if (Health <= MaxHealth * 0.5f)
 		{
 			if (State != AnimalStateEnum.Sleeping)
 			{
 				State = AnimalStateEnum.Sleeping;
 			}
 		}
-		else if ((Hunger >= 50f && State == AnimalStateEnum.Hunting) || (Health >= 50f && State == AnimalStateEnum.Sleeping))
+		else if ((Hunger >= MaxHunger * 0.7f && State == AnimalStateEnum.Hunting) || (Health >= MaxHealth * 0.7f && State == AnimalStateEnum.Sleeping))
 		{
 			State = AnimalStateEnum.Fine;
 		}
@@ -102,15 +129,28 @@ public partial class Animal : CharacterBody2D, IBio
 				Health = MaxHealth;
 			}
 		}
-
-		if (TargetNode != null)
+		switch (State)
 		{
-			var pos = TargetNode.GlobalPosition - GlobalPosition;
-			if (pos.Length() > 10f)
-			{
-				Velocity = pos.Normalized() * 200f;
-			}
+			case AnimalStateEnum.Hunting:
+				if (TargetNode != null)
+				{
+					var pos = TargetNode.GlobalPosition - GlobalPosition;
+					if (pos.Length() > 10f)
+					{
+						Velocity = pos.Normalized() * 200f;
+					}
+				}
+				break;
+			case AnimalStateEnum.Sleeping:
+				Velocity = Vector2.Zero;
+				Health += (float)delta * 0.1f;
+				break;
+			case AnimalStateEnum.Fine:
+				break;
+			default:
+				break;
 		}
+		
 		if (BeingControlled)
 		{
 			Velocity = Input.GetVector("Left", "Right", "Up", "Down") * 300f;
@@ -119,15 +159,32 @@ public partial class Animal : CharacterBody2D, IBio
 	}
 	public void OnBodyEntered(Node2D body)
 	{
+		GD.Print($"Entered {body.Name} {body.GetType()}");
 		switch (Diet)
 		{
 			case AnimalTypeEnum.Herbivore:
 				if (body is Plant plant)
 				{
+					GD.Print($"{Name} ate {plant.Name}");
 					Eat(plant);
 				}
 				break;
+			case AnimalTypeEnum.Carnivore:
+				if (body is Animal animal && animal != this)
+				{
+					GD.Print($"{Name} was eaten by {animal.Name}");
+					Eat(animal);
+				}
+				break;
+			case AnimalTypeEnum.Omnivore:
+
+				if (body is IBio bio && bio != this)
+				{
+					Eat(bio);
+				}
+				break;
 			default:
+				GD.Print("Diet not supported");
 				break;
 		}
 	}
@@ -135,6 +192,7 @@ public partial class Animal : CharacterBody2D, IBio
 	{
 		Hunger += node.BeEaten();
 		TargetNode = null;
+		Velocity = Vector2.Zero;
 	}
 }
 public enum AnimalTypeEnum

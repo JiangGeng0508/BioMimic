@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://b1ce7pxjdipfu"]
+[gd_scene load_steps=4 format=3 uid="uid://b1ce7pxjdipfu"]
 
 [ext_resource type="Script" uid="uid://o15tus1lenf6" path="res://Script/Main.cs" id="1_g6ejq"]
 [ext_resource type="PackedScene" uid="uid://dxy5toyf51nrf" path="res://Scene/Mouse.tscn" id="2_djkur"]
+[ext_resource type="PackedScene" uid="uid://n430dbogtqec" path="res://Scene/Cat.tscn" id="3_djkur"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_g6ejq")
@@ -21,5 +22,11 @@ alignment = 1
 
 [node name="Mouse" parent="." instance=ExtResource("2_djkur")]
 position = Vector2(404.96, 201.688)
+
+[node name="Mouse2" parent="." instance=ExtResource("2_djkur")]
+position = Vector2(593.751, 168.822)
+
+[node name="Cat" parent="." instance=ExtResource("3_djkur")]
+position = Vector2(850, 175)
 
 [connection signal="pressed" from="SpawnPlant" to="." method="OnSpawnPlantButtonPressed"]
