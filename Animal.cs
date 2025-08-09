@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Linq;
 
 public partial class Animal : CharacterBody2D, IBio
 {
@@ -12,16 +13,14 @@ public partial class Animal : CharacterBody2D, IBio
 	[Export]
 	public float Hunger { get; set; } = 100.0f;
 	[Export]
-	public float SightRange { get; set; } = 100.0f;
-
-	public Node2D[] FoundedNodes { get; set; }
-
+	public float EatRange { get; set; } = 30.0f;
+	public Node2D TargetNode { get; set; } = null;
 	public Label InfLabel { get; set; }
 
 	public override void _Ready()
 	{
 		AddToGroup($"{Diet}Animals");
-		GetNode<CollisionShape2D>("Sight/SightShape").Shape.Set("Radius", SightRange);
+		GetNode<CollisionShape2D>("Mouth/ReachArea").Shape.Set("Radius", EatRange);
 
 		InfLabel = new Label();
 		AddChild(InfLabel);
@@ -32,23 +31,69 @@ public partial class Animal : CharacterBody2D, IBio
 		Hunger -= (float)delta * 0.1f;
 		InfLabel.Text = $"\nHealth: {Health:F1}\nHunger: {Hunger:F1}\nState: {State}";
 
-		if (Hunger <= 50f && State!= AnimalStateEnum.Hunting)
+		if (Hunger <= 50f)
 		{
-			State = AnimalStateEnum.Hunting;
+			if (State != AnimalStateEnum.Hunting)
+			{
+				State = AnimalStateEnum.Hunting;
+
+				switch (Diet)
+				{
+					case AnimalTypeEnum.Herbivore:
+						var nodes = GetTree().GetNodesInGroup("Plants");
+						var plants = nodes.Cast<Plant>();
+						var nearest = plants.OrderBy(p => p.GlobalPosition.DistanceTo(GlobalPosition)).First();
+						TargetNode = nearest;
+						GD.Print($"Hunting {nearest.Name} at {nearest.GlobalPosition}");
+						break;
+					default:
+						break;
+				}
+			}
 		}
-		else if (Health <= 50f && State!= AnimalStateEnum.Sleeping)
+		else if (Health <= 50f)
 		{
-			State = AnimalStateEnum.Sleeping;
+			if (State != AnimalStateEnum.Sleeping)
+			{
+				State = AnimalStateEnum.Sleeping;
+			}
 		}
-		else if ((Hunger >= 80f && State == AnimalStateEnum.Hunting) || (Health >= 80f && State == AnimalStateEnum.Sleeping))
+		else if ((Hunger >= 50f && State == AnimalStateEnum.Hunting) || (Health >= 50f && State == AnimalStateEnum.Sleeping))
 		{
 			State = AnimalStateEnum.Fine;
 		}
+
+		Velocity = Input.GetVector("Left", "Right", "Up", "Down") * 300f;
+		if (TargetNode != null)
+		{
+			var pos = TargetNode.GlobalPosition - GlobalPosition;
+			if (pos.Length() > 10f)
+			{
+				Velocity = pos.Normalized() * 200f;
+			}
+		}
+		MoveAndSlide();
 	}
 	public void OnBodyEntered(Node2D body)
 	{
-		FoundedNodes[FoundedNodes.Length] = body;
+		switch (Diet)
+		{
+			case AnimalTypeEnum.Herbivore:
+				if (body is Plant plant)
+				{
+					Eat(plant);
+				}
+				break;
+			default:
+				break;
+		}
 	}
+
+	public void Eat(IBio body)
+	{
+		body.OnBeEaten();
+	}
+
 }
 public enum AnimalTypeEnum
 {
