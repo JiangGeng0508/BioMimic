@@ -19,6 +19,8 @@ public partial class Animal : CharacterBody2D, IBio
 
 	[Export]
 	public float EatRange { get; set; } = 30.0f;
+	[Export]
+	public bool BeingControlled { get; set; } = false;
 	public Node2D TargetNode { get; set; } = null;
 	public Label InfLabel { get; set; }
 
@@ -48,16 +50,30 @@ public partial class Animal : CharacterBody2D, IBio
 				switch (Diet)
 				{
 					case AnimalTypeEnum.Herbivore:
-						var nodes = GetTree().GetNodesInGroup("Plants");
-						if (nodes.Count == 0)
+						var nodes1 = GetTree().GetNodesInGroup("Plants");
+						if (nodes1.Count == 0)
 						{
 							State = AnimalStateEnum.Fine;
 							return;
 						}
-						var plants = nodes.Cast<Plant>();
-						var nearest = plants.OrderBy(p => p.GlobalPosition.DistanceTo(GlobalPosition)).First();
-						TargetNode = nearest;
-						GD.Print($"Hunting {nearest.Name} at {nearest.GlobalPosition}");
+						var plants = nodes1.Cast<Plant>();
+						var nearestPlant = plants.OrderBy(p => p.GlobalPosition.DistanceTo(GlobalPosition)).First();
+						TargetNode = nearestPlant;
+						GD.Print($"Hunting {nearestPlant.Name} at {nearestPlant.GlobalPosition}");
+						break;
+					case AnimalTypeEnum.Carnivore:
+						var nodes2 = GetTree().GetNodesInGroup("HerbivoreAnimals");
+						if (nodes2.Count == 0)
+						{
+							State = AnimalStateEnum.Fine;
+							return;
+						}
+						var animals = nodes2.Cast<Animal>();
+						var nearestAnimal = animals.OrderBy(p => p.GlobalPosition.DistanceTo(GlobalPosition)).First();
+						TargetNode = nearestAnimal;
+						break;
+					case AnimalTypeEnum.Omnivore:
+
 						break;
 					default:
 						break;
@@ -87,7 +103,6 @@ public partial class Animal : CharacterBody2D, IBio
 			}
 		}
 
-		Velocity = Input.GetVector("Left", "Right", "Up", "Down") * 300f;
 		if (TargetNode != null)
 		{
 			var pos = TargetNode.GlobalPosition - GlobalPosition;
@@ -95,6 +110,10 @@ public partial class Animal : CharacterBody2D, IBio
 			{
 				Velocity = pos.Normalized() * 200f;
 			}
+		}
+		if (BeingControlled)
+		{
+			Velocity = Input.GetVector("Left", "Right", "Up", "Down") * 300f;
 		}
 		MoveAndSlide();
 	}
