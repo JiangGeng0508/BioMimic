@@ -1,13 +1,15 @@
 [gd_scene load_steps=4 format=3 uid="uid://6n68jvf1tus0"]
 
 [ext_resource type="Script" uid="uid://brremo8cjvam6" path="res://Script/Plant.cs" id="1_f6et3"]
-[ext_resource type="SpriteFrames" uid="uid://w8nkgnewcgxl" path="res://Asset/Animl/Plant.tres" id="2_f6et3"]
+[ext_resource type="SpriteFrames" uid="uid://w8nkgnewcgxl" path="res://Asset/Plant.tres" id="2_f6et3"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_gdi4q"]
 radius = 21.095
 
 [node name="Plant" type="Area2D"]
 script = ExtResource("1_f6et3")
+MaxHealth = 1.0
+MaxHunger = 1.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("CircleShape2D_gdi4q")
@@ -23,5 +25,7 @@ offset = Vector2(-60, 0)
 [node name="Timer" type="Timer" parent="."]
 wait_time = 5.0
 autostart = true
+
+[node name="InfoLabel" type="Label" parent="."]
 
 [connection signal="timeout" from="Timer" to="." method="Grow"]

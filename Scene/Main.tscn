@@ -1,8 +1,6 @@
-[gd_scene load_steps=4 format=3 uid="uid://b1ce7pxjdipfu"]
+[gd_scene load_steps=2 format=3 uid="uid://b1ce7pxjdipfu"]
 
 [ext_resource type="Script" uid="uid://o15tus1lenf6" path="res://Script/Main.cs" id="1_g6ejq"]
-[ext_resource type="PackedScene" uid="uid://dxy5toyf51nrf" path="res://Scene/Mouse.tscn" id="2_djkur"]
-[ext_resource type="PackedScene" uid="uid://n430dbogtqec" path="res://Scene/Cat.tscn" id="3_djkur"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_g6ejq")
@@ -20,13 +18,36 @@ offset_bottom = 31.0
 text = "1"
 alignment = 1
 
-[node name="Mouse" parent="." instance=ExtResource("2_djkur")]
-position = Vector2(404.96, 201.688)
+[node name="SpawnMouse" type="Button" parent="."]
+offset_left = 170.0
+offset_top = -1.0
+offset_right = 270.0
+offset_bottom = 30.0
+text = "SpawnMouse"
 
-[node name="Mouse2" parent="." instance=ExtResource("2_djkur")]
-position = Vector2(593.751, 168.822)
+[node name="SpawnNum" type="LineEdit" parent="SpawnMouse"]
+layout_mode = 0
+offset_left = 109.0
+offset_right = 177.563
+offset_bottom = 31.0
+text = "1"
+alignment = 1
 
-[node name="Cat" parent="." instance=ExtResource("3_djkur")]
-position = Vector2(850, 175)
+[node name="SpawnCat" type="Button" parent="."]
+offset_left = 347.0
+offset_top = -1.0
+offset_right = 447.0
+offset_bottom = 30.0
+text = "SpawnCat"
+
+[node name="SpawnNum" type="LineEdit" parent="SpawnCat"]
+layout_mode = 0
+offset_left = 101.0
+offset_right = 169.563
+offset_bottom = 31.0
+text = "1"
+alignment = 1
 
 [connection signal="pressed" from="SpawnPlant" to="." method="OnSpawnPlantButtonPressed"]
+[connection signal="pressed" from="SpawnMouse" to="." method="OnSpawnMouseButtonPressed"]
+[connection signal="pressed" from="SpawnCat" to="." method="OnSpawnCatButtonPressed"]

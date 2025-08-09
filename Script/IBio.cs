@@ -1,3 +1,4 @@
+using System;
 using Godot;
 
 public interface IBio
@@ -6,8 +7,8 @@ public interface IBio
 	public float Hunger { get; set; }
 	public float EatEfficiency { get; set; }
 	public virtual void Eat(IBio node)
-	{ 
-		Hunger += node.BeEaten();
+	{
+		throw new NotImplementedException();
 	}
 	public virtual float BeEaten()
 	{

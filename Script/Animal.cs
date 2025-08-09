@@ -4,6 +4,8 @@ using System.Linq;
 
 public partial class Animal : CharacterBody2D, IBio
 {
+	[Signal]
+	public delegate void BreedEventHandler(int count);
 	[Export(PropertyHint.Enum, "Herbivore,Carnivore,Omnivore")]
 	public AnimalTypeEnum Diet { get; set; } = AnimalTypeEnum.Omnivore;
 
@@ -21,39 +23,49 @@ public partial class Animal : CharacterBody2D, IBio
 	public float EatRange { get; set; } = 30.0f;
 	[Export]
 	public bool BeingControlled { get; set; } = false;
+	[Export]
+	public bool LabelVisible { get; set; } = false;
 	public Node2D TargetNode { get; set; } = null;
-	public Label InfLabel { get; set; }
+	public Label InfoLabel { get; set; }
+	public AnimatedSprite2D anim;
 
 	public override void _Ready()
 	{
 		AddToGroup($"{Diet}Animals");
+		AddToGroup("Animals");
 		GetNode<CollisionShape2D>("Mouth/ReachArea").Shape.Set("Radius", EatRange);
 		Hunger = MaxHunger;
 		Health = MaxHealth;
-
-		InfLabel = new Label();
-		AddChild(InfLabel);
+		anim = GetNode<AnimatedSprite2D>("Anim");
+		anim.Play("Idle");
+		InfoLabel = GetNode<Label>("InfoLabel");
+		InfoLabel.Visible = LabelVisible;
 	}
 	public override void _PhysicsProcess(double delta)
 	{
-		
-		Health -= (float)delta * 0.1f;
 		Hunger -= (float)delta * 0.3f;
-		InfLabel.Text = $"\nHealth: {Health:F1}\nHunger: {Hunger:F1}\nState: {State}";
+		InfoLabel.Text = $"\nHealth: {Health:F1}\nHunger: {Hunger:F1}\nState: {State}";
 
 		if (Health <= 0)
 		{
 			QueueFree();
 			return;
 		}
+		else if (Health >= MaxHealth * 2f)
+		{
+			GD.Print("Health is too high");
+			Health = MaxHealth;
+			EmitSignal(nameof(Breed), 1);
+		}
+
 		if (Hunger <= 0)
 		{
 			Health -= (float)delta * 0.2f;
 			Hunger = 0;
 		}
-		else if (Hunger > MaxHunger * 0.5f)
+		else if (Hunger > MaxHunger * 0.5f && Hunger < MaxHunger)
 		{
-			Health += (float)delta * 0.2f;
+			Health += (float)delta * 0.3f;
 		}
 		else if (Hunger >= MaxHunger)
 		{
@@ -118,17 +130,6 @@ public partial class Animal : CharacterBody2D, IBio
 		{
 			State = AnimalStateEnum.Fine;
 		}
-		else
-		{
-			if (Hunger >= MaxHunger)
-			{
-				Hunger = MaxHunger;
-			}
-			if (Health >= MaxHealth)
-			{
-				Health = MaxHealth;
-			}
-		}
 		switch (State)
 		{
 			case AnimalStateEnum.Hunting:
@@ -150,12 +151,25 @@ public partial class Animal : CharacterBody2D, IBio
 			default:
 				break;
 		}
-		
+
 		if (BeingControlled)
 		{
 			Velocity = Input.GetVector("Left", "Right", "Up", "Down") * 300f;
 		}
 		MoveAndSlide();
+
+		if (Velocity.Length() > 0)
+		{
+			anim.Play("Walk");
+			if (Velocity.X > 0)
+				anim.FlipH = false;
+			else if (Velocity.X < 0)
+				anim.FlipH = true;
+		}
+		else
+		{
+			anim.Play("Idle");
+		}
 	}
 	public void OnBodyEntered(Node2D body)
 	{
@@ -165,14 +179,14 @@ public partial class Animal : CharacterBody2D, IBio
 			case AnimalTypeEnum.Herbivore:
 				if (body is Plant plant)
 				{
-					GD.Print($"{Name} ate {plant.Name}");
+					GD.Print($"{Name} ate {plant.Name} plant");
 					Eat(plant);
 				}
 				break;
 			case AnimalTypeEnum.Carnivore:
 				if (body is Animal animal && animal != this)
 				{
-					GD.Print($"{Name} was eaten by {animal.Name}");
+					GD.Print($"{Name} was eaten by {animal.Name} animal");
 					Eat(animal);
 				}
 				break;

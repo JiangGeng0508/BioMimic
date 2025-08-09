@@ -1,6 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://dps55gjyu0f2t"]
+[gd_scene load_steps=5 format=3 uid="uid://dps55gjyu0f2t"]
 
 [ext_resource type="Script" uid="uid://dihv6p8vjwdh8" path="res://Script/Animal.cs" id="1_l6hdp"]
+[ext_resource type="SpriteFrames" uid="uid://pm6kk1lgl41b" path="res://Asset/Animal/Mouse1.tres" id="2_dq43s"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_yak74"]
 radius = 18.0
@@ -19,6 +20,14 @@ shape = SubResource("CircleShape2D_yak74")
 
 [node name="ReachArea" type="CollisionShape2D" parent="Mouth"]
 shape = SubResource("CircleShape2D_l6hdp")
+
+[node name="InfoLabel" type="Label" parent="."]
+
+[node name="Anim" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, -24)
+scale = Vector2(2, 2)
+sprite_frames = ExtResource("2_dq43s")
+animation = &"Idle"
 
 [connection signal="area_entered" from="Mouth" to="." method="OnBodyEntered"]
 [connection signal="body_entered" from="Mouth" to="." method="OnBodyEntered"]
