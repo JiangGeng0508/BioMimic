@@ -91,7 +91,7 @@ public partial class Animal : CharacterBody2D, IBio
 
 	public void Eat(IBio body)
 	{
-		body.OnBeEaten();
+		body.BeEaten();
 	}
 
 }

@@ -1,10 +1,10 @@
 [gd_scene load_steps=3 format=3 uid="uid://b1ce7pxjdipfu"]
 
-[ext_resource type="Script" uid="uid://o15tus1lenf6" path="res://Main.cs" id="1_glv2v"]
-[ext_resource type="PackedScene" uid="uid://dxy5toyf51nrf" path="res://Mouse.tscn" id="2_uu6xs"]
+[ext_resource type="Script" uid="uid://o15tus1lenf6" path="res://Script/Main.cs" id="1_g6ejq"]
+[ext_resource type="PackedScene" uid="uid://dxy5toyf51nrf" path="res://Scene/Mouse.tscn" id="2_djkur"]
 
 [node name="Main" type="Node2D"]
-script = ExtResource("1_glv2v")
+script = ExtResource("1_g6ejq")
 
 [node name="SpawnPlant" type="Button" parent="."]
 offset_right = 8.0
@@ -19,7 +19,7 @@ offset_bottom = 31.0
 text = "1"
 alignment = 1
 
-[node name="Mouse" parent="." instance=ExtResource("2_uu6xs")]
+[node name="Mouse" parent="." instance=ExtResource("2_djkur")]
 position = Vector2(404.96, 201.688)
 
 [connection signal="pressed" from="SpawnPlant" to="." method="OnSpawnPlantButtonPressed"]

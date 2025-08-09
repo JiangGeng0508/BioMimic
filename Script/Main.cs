@@ -3,9 +3,9 @@ using System;
 
 public partial class Main : Node2D
 {
-	public PackedScene plantArea = GD.Load<PackedScene>("res://Plant.tscn");
-	public PackedScene mouseArea = GD.Load<PackedScene>("res://Mouse.tscn");
-	public PackedScene catArea = GD.Load<PackedScene>("res://Cat.tscn");
+	public PackedScene plantArea = GD.Load<PackedScene>("res://Scene/Plant.tscn");
+	public PackedScene mouseArea = GD.Load<PackedScene>("res://Scene/Mouse.tscn");
+	public PackedScene catArea = GD.Load<PackedScene>("res://Scene/Cat.tscn");
 
 	public void SpawnPlant(int count = 1)
 	{
