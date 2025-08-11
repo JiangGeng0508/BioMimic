@@ -5,10 +5,10 @@ using System.Linq;
 public partial class Animal : CharacterBody2D, IBio
 {
 	[Signal]
-	public delegate void BreedEventHandler(int count);
+	public delegate void BreedEventHandler(int count);//繁殖信号
 	[Export(PropertyHint.Enum, "Herbivore,Carnivore,Omnivore")]
-	public AnimalTypeEnum Diet { get; set; } = AnimalTypeEnum.Omnivore;
-	private AnimalStateEnum _state = AnimalStateEnum.Fine;
+	public AnimalTypeEnum Diet { get; set; } = AnimalTypeEnum.Omnivore;//食性
+	private AnimalStateEnum _state = AnimalStateEnum.Fine;//状态
 	public AnimalStateEnum State
 	{
 		get
@@ -40,66 +40,66 @@ public partial class Animal : CharacterBody2D, IBio
 	public float Health { get; set; } = 100.0f;
 	public float Hunger { get; set; } = 100.0f;
 	[Export]
-	public float EatEfficiency { get; set; } = 0.8f;
-
+	public float EatEfficiency { get; set; } = 0.8f;//食物链能量传递效率（本级传向下一级）
 	[Export]
-	public float EatRange { get; set; } = 30.0f;
+	public float EatRange { get; set; } = 30.0f;//检测食物区域的半径
 	[Export]
-	public bool BeingControlled { get; set; } = false;
+	public bool BeingControlled { get; set; } = false;//是否被控制
 	[Export]
-	public bool LabelVisible { get; set; } = false;
-	public Node2D TargetNode { get; set; } = null;
-	public Vector2 WanderTarget { get; set; } = Vector2.Zero;
-	public Label InfoLabel { get; set; }
-	public AnimatedSprite2D anim;
+	public bool LabelVisible { get; set; } = false;//是否显示信息标签
+	public Node2D TargetNode { get; set; } = null;//当前捕猎目标节点
+	public Vector2 WanderTarget { get; set; }//随机游走目标位置
+	public Label InfoLabel { get; set; }//信息标签节点
+	public AnimatedSprite2D anim;//动画节点
 
 	public override void _Ready()
 	{
+		//添加分类
 		AddToGroup($"{Diet}Animals");
 		AddToGroup("Animals");
-		GetNode<CollisionShape2D>("Mouth/ReachArea").Shape.Set("Radius", EatRange);
+		GetNode<CollisionShape2D>("Mouth/ReachArea").Shape.Set("Radius", EatRange);//设置检测范围
+																				   //初始化属性
 		Hunger = MaxHunger;
 		Health = MaxHealth;
-		anim = GetNode<AnimatedSprite2D>("Anim");
+		anim = GetNode<AnimatedSprite2D>("Anim");//初始化动画
 		anim.Play("Idle");
-		InfoLabel = GetNode<Label>("InfoLabel");
+		InfoLabel = GetNode<Label>("InfoLabel");//初始化信息标签
 		InfoLabel.Visible = LabelVisible;
+		WanderTarget = GlobalPosition;//初始化随机游走目标位置
 	}
 	public override void _PhysicsProcess(double delta)
 	{
-		Hunger -= (float)delta * 0.3f;
-		InfoLabel.Visible = LabelVisible;
+		Hunger -= (float)delta * 0.3f;//减少饥饿度
+		InfoLabel.Visible = LabelVisible;//显示信息标签
+		//更新信息标签内容
 		InfoLabel.Text = $"\nHealth: {Health:F1}\nHunger: {Hunger:F1}\nState: {State}\nWanderTarget: {WanderTarget}\nVelocity: {Velocity}\n";
-
-		if (Health <= 0)
+		if (Health <= 0)//死亡
 		{
 			QueueFree();
 			return;
 		}
-		else if (Health >= MaxHealth * 2f)
+		else if (Health >= MaxHealth * 2f)//繁殖
 		{
 			GD.Print("Health is too high");
 			Health = MaxHealth;
 			EmitSignal(nameof(Breed), 1);
 		}
-
-		if (Hunger <= 0)
+		if (Hunger <= 0)//饥饿
 		{
 			Health -= (float)delta * 0.2f;
 			Hunger = 0;
 		}
-		else if (Hunger > MaxHunger * 0.5f && Hunger < MaxHunger)
+		else if (Hunger > MaxHunger * 0.5f && Hunger < MaxHunger)//饱腹
 		{
 			Health += (float)delta * 0.3f;
 		}
-		else if (Hunger >= MaxHunger)
+		else if (Hunger >= MaxHunger)//过饱
 		{
 			Health += Hunger - MaxHunger;
 			Hunger = MaxHunger;
 		}
 
-
-		if (Hunger <= MaxHunger * 0.5f)
+		if (Hunger <= MaxHunger * 0.5f)//饥饿状态
 		{
 			if (State != AnimalStateEnum.Hunting)
 			{
@@ -109,6 +109,7 @@ public partial class Animal : CharacterBody2D, IBio
 				{
 					case AnimalTypeEnum.Herbivore:
 						var nodes1 = GetTree().GetNodesInGroup("Plants");
+						nodes1 = (Godot.Collections.Array<Node>)nodes1.Except(GetTree().GetNodesInGroup("HuntingTargets"));
 						if (nodes1.Count == 0)
 						{
 							State = AnimalStateEnum.Fine;
@@ -116,17 +117,11 @@ public partial class Animal : CharacterBody2D, IBio
 						}
 						var plants = nodes1.Cast<Plant>();
 						var nearestPlant = plants.OrderBy(p => p.GlobalPosition.DistanceTo(GlobalPosition)).First();
-						TargetNode = nearestPlant;
-						TargetNode.TreeExiting += () =>
-						{
-							TargetNode = null;
-							State = AnimalStateEnum.Fine;
-							Velocity = Vector2.Zero;
-						};
-						GD.Print($"Hunting {nearestPlant.Name} at {nearestPlant.GlobalPosition}");
+						SetTarget(nearestPlant);
 						break;
 					case AnimalTypeEnum.Carnivore:
 						var nodes2 = GetTree().GetNodesInGroup("HerbivoreAnimals");
+						nodes2 = (Godot.Collections.Array<Node>)nodes2.Except(GetTree().GetNodesInGroup("HuntingTargets"));
 						if (nodes2.Count == 0)
 						{
 							State = AnimalStateEnum.Fine;
@@ -134,7 +129,7 @@ public partial class Animal : CharacterBody2D, IBio
 						}
 						var animals = nodes2.Cast<Animal>();
 						var nearestAnimal = animals.OrderBy(p => p.GlobalPosition.DistanceTo(GlobalPosition)).First();
-						TargetNode = nearestAnimal;
+						SetTarget(nearestAnimal);
 						break;
 					case AnimalTypeEnum.Omnivore:
 
@@ -144,13 +139,14 @@ public partial class Animal : CharacterBody2D, IBio
 				}
 			}
 		}
-		else if (Health <= MaxHealth * 0.5f)
+		else if (Health <= MaxHealth * 0.5f)//受伤状态
 		{
 			if (State != AnimalStateEnum.Sleeping)
 			{
 				State = AnimalStateEnum.Sleeping;
 			}
 		}
+		//超过阈值恢复状态
 		else if ((Hunger >= MaxHunger * 0.7f && State == AnimalStateEnum.Hunting) || (Health >= MaxHealth * 0.7f && State == AnimalStateEnum.Sleeping))
 		{
 			State = AnimalStateEnum.Fine;
@@ -207,20 +203,17 @@ public partial class Animal : CharacterBody2D, IBio
 	}
 	public void OnBodyEntered(Node2D body)
 	{
-		GD.Print($"Entered {body.Name} {body.GetType()}");
 		switch (Diet)
 		{
 			case AnimalTypeEnum.Herbivore:
 				if (body is Plant plant)
 				{
-					GD.Print($"{Name} ate {plant.Name} plant");
 					Eat(plant);
 				}
 				break;
 			case AnimalTypeEnum.Carnivore:
 				if (body is Animal animal && animal != this)
 				{
-					GD.Print($"{Name} was eaten by {animal.Name} animal");
 					Eat(animal);
 				}
 				break;
@@ -232,7 +225,7 @@ public partial class Animal : CharacterBody2D, IBio
 				}
 				break;
 			default:
-				GD.Print("Diet not supported");
+				GD.PrintErr("Diet not supported");
 				break;
 		}
 	}
@@ -241,6 +234,17 @@ public partial class Animal : CharacterBody2D, IBio
 		Hunger += node.BeEaten();
 		TargetNode = null;
 		Velocity = Vector2.Zero;
+	}
+	public void SetTarget(Node2D node)
+	{
+		TargetNode = node;
+		node.AddToGroup("HuntingTargets");//标记猎物，防止重复捕猎
+		node.TreeExiting += () =>
+		{
+			TargetNode = null;
+			State = AnimalStateEnum.Fine;
+			Velocity = Vector2.Zero;
+		};
 	}
 }
 public enum AnimalTypeEnum
