@@ -8,8 +8,31 @@ public partial class Animal : CharacterBody2D, IBio
 	public delegate void BreedEventHandler(int count);
 	[Export(PropertyHint.Enum, "Herbivore,Carnivore,Omnivore")]
 	public AnimalTypeEnum Diet { get; set; } = AnimalTypeEnum.Omnivore;
-
-	public AnimalStateEnum State { get; set; } = AnimalStateEnum.Fine;
+	private AnimalStateEnum _state = AnimalStateEnum.Fine;
+	public AnimalStateEnum State
+	{
+		get
+		{
+			return _state;
+		}
+		set
+		{
+			_state = value;
+			switch (value)
+			{
+				case AnimalStateEnum.Fine:
+					WanderTarget = GlobalPosition;
+					break;
+				case AnimalStateEnum.Hunting:
+					break;
+				case AnimalStateEnum.Sleeping:
+					break;
+				default:
+					GD.Print($"State {value} not defined");
+					break;
+			}
+		}
+	}
 	[Export]
 	public float MaxHealth { get; set; } = 100.0f;
 	[Export]
@@ -26,6 +49,7 @@ public partial class Animal : CharacterBody2D, IBio
 	[Export]
 	public bool LabelVisible { get; set; } = false;
 	public Node2D TargetNode { get; set; } = null;
+	public Vector2 WanderTarget { get; set; } = Vector2.Zero;
 	public Label InfoLabel { get; set; }
 	public AnimatedSprite2D anim;
 
@@ -44,7 +68,8 @@ public partial class Animal : CharacterBody2D, IBio
 	public override void _PhysicsProcess(double delta)
 	{
 		Hunger -= (float)delta * 0.3f;
-		InfoLabel.Text = $"\nHealth: {Health:F1}\nHunger: {Hunger:F1}\nState: {State}";
+		InfoLabel.Visible = LabelVisible;
+		InfoLabel.Text = $"\nHealth: {Health:F1}\nHunger: {Hunger:F1}\nState: {State}\nWanderTarget: {WanderTarget}\nVelocity: {Velocity}\n";
 
 		if (Health <= 0)
 		{
@@ -147,6 +172,15 @@ public partial class Animal : CharacterBody2D, IBio
 				Health += (float)delta * 0.1f;
 				break;
 			case AnimalStateEnum.Fine:
+				var pos1 = WanderTarget - GlobalPosition;
+				if (pos1.Length() > 10f)
+				{
+					Velocity = pos1.Normalized() * 200f;
+				}
+				else
+				{
+					WanderTarget = GlobalPosition + new Vector2(GD.Randf() * 200f - 100f, GD.Randf() * 200f - 100f);
+				}
 				break;
 			default:
 				break;
