@@ -1,14 +1,14 @@
 [gd_scene load_steps=3 format=3 uid="uid://n430dbogtqec"]
 
 [ext_resource type="PackedScene" uid="uid://dps55gjyu0f2t" path="res://Scene/Animal.tscn" id="1_khiut"]
-[ext_resource type="Texture2D" uid="uid://bb52gkh5kukd6" path="res://icon.svg" id="2_8sv5b"]
+[ext_resource type="SpriteFrames" uid="uid://c26ji00yvuvov" path="res://Asset/Animal/3 Cat/Cat1.tres" id="3_8sv5b"]
 
 [node name="Cat" instance=ExtResource("1_khiut")]
 MaxHealth = 20.0
 MaxHunger = 20.0
 EatRange = 45.0
 
-[node name="Icon" type="Sprite2D" parent="." index="1"]
-rotation = 3.14159
-scale = Vector2(0.3, 0.3)
-texture = ExtResource("2_8sv5b")
+[node name="Anim" type="AnimatedSprite2D" parent="." index="3"]
+position = Vector2(0, -15)
+sprite_frames = ExtResource("3_8sv5b")
+animation = &"Idle"

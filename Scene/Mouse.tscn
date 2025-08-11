@@ -1,13 +1,14 @@
 [gd_scene load_steps=3 format=3 uid="uid://dxy5toyf51nrf"]
 
 [ext_resource type="PackedScene" uid="uid://dps55gjyu0f2t" path="res://Scene/Animal.tscn" id="1_ttf2w"]
-[ext_resource type="SpriteFrames" uid="uid://pm6kk1lgl41b" path="res://Asset/Animal/Mouse1.tres" id="2_d1nea"]
+[ext_resource type="SpriteFrames" uid="uid://pm6kk1lgl41b" path="res://Asset/Animal/5 Rat/Mouse1.tres" id="2_d1nea"]
 
 [node name="Mouse" instance=ExtResource("1_ttf2w")]
 Diet = 0
 MaxHealth = 10.0
 MaxHunger = 10.0
 
-[node name="Anim" parent="." index="3"]
+[node name="Anim" type="AnimatedSprite2D" parent="." index="3"]
+position = Vector2(0, -11)
 sprite_frames = ExtResource("2_d1nea")
-animation = &"Idle"
+animation = &"Death"
